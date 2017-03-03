@@ -94,7 +94,7 @@ class Finalseg
         $states = array('B', 'M', 'E', 'S');
         $V = array();
         $V[0] = array();
-        $path = array();
+        $last_states = array();
 
         foreach ($states as $key => $state) {
             $y = $state;
@@ -106,13 +106,12 @@ class Finalseg
                 $prob_emit = MIN_FLOAT;
             }
             $V[0][$y] = self::$prob_start[$y] + $prob_emit;
-            $path[$y] = $y;
+            $last_states[0][$y] = $y;
         }
 
         for ($t=1; $t<mb_strlen($obs, 'UTF-8'); $t++) {
             $c = mb_substr($obs, $t, 1, 'UTF-8');
             $V[$t] = array();
-            $newpath = array();
             foreach ($states as $key => $state) {
                 $y = $state;
                 $temp_prob_array = array();
@@ -136,17 +135,8 @@ class Finalseg
                 $max_prob = reset($temp_prob_array);
                 $max_key = key($temp_prob_array);
                 $V[$t][$y] = $max_prob;
-                if (is_array($path[$max_key])) {
-                    $newpath[$y] = array();
-                    foreach ($path[$max_key] as $key => $path_value) {
-                        array_push($newpath[$y], $path_value);
-                    }
-                    array_push($newpath[$y], $y);
-                } else {
-                    $newpath[$y] = array($path[$max_key], $y);
-                }
+                $last_states[$t][$y] = $max_key;
             }
-            $path = $newpath;
         }
 
         $es_states = array('E','S');
@@ -159,9 +149,14 @@ class Finalseg
         arsort($temp_prob_array);
         $prob = reset($temp_prob_array);
         $state = key($temp_prob_array);
+        
+        $pos_list = array($state);
+        for ($t=$len-1; $t>=1; $t--) {
+            $state = $last_states[$t][$state];
+            $pos_list []= $state;
+        }
 
-        return array("prob"=>$prob, "pos_list"=>$path[$state]);
-
+        return array("prob"=>$prob, "pos_list"=>array_reverse($pos_list));
     }// end function viterbi
 
     /**
