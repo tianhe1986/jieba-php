@@ -411,8 +411,8 @@ class Jieba
         );
         $blocks = $matches[0];
 
-        foreach ($blocks as $blk) {
-            if (preg_match('/'.$re_han_pattern.'/u', $blk)) {
+        foreach ($blocks as $key => $blk) {
+            if ($matches[2][$key] !== '') {
                 if ($cut_all) {
                     $words = Jieba::__cutAll($blk);
                 } else {
