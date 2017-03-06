@@ -110,7 +110,8 @@ class Jieba
         self::$route = array();
         self::$route[$N] = array($N => 1.0);
         for ($i=($N-1); $i>=0; $i--) {
-            $candidates = array();
+            $max_prob = MIN_FLOAT;
+            $max_key = NULL;
             foreach ($DAG[$i] as $x) {
                 $w_c = mb_substr($sentence, $i, (($x+1)-$i), 'UTF-8');
                 $previous_freq = current(self::$route[$x+1]);
@@ -119,11 +120,11 @@ class Jieba
                 } else {
                     $current_freq = (float) $previous_freq + self::$min_freq;
                 }
-                $candidates[$x] = $current_freq;
+                if ($current_freq >= $max_prob) {
+                    $max_prob = $current_freq;
+                    $max_key = $x;
+                }
             }
-            arsort($candidates);
-            $max_prob = reset($candidates);
-            $max_key = key($candidates);
             self::$route[$i] = array($max_key => $max_prob);
         }
 
